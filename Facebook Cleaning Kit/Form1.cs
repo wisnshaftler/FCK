@@ -79,6 +79,7 @@ namespace Facebook_Cleaning_Kit
         private void btnInactiveUnfriend_Click(object sender, EventArgs e)
         {
             browser.Hide();
+            allUnfriend = false;
             boolInactiveUnfriend = true;
             maxPostsToScan = Convert.ToInt32(Math.Round(numberBox.Value, 0));
             numberBox.Enabled = false;
@@ -145,7 +146,7 @@ namespace Facebook_Cleaning_Kit
             boolGetFriendList = false;
             boolPostSeeMore = true;
             boolGetActiveFriend = true;
-
+            allUnfriend = true;
             btnInactiveUnfriend.Enabled = false;
             //btnAllUnfriend.Enabled = false;
             btnDeleteAllChats.Enabled = false;
@@ -417,16 +418,26 @@ namespace Facebook_Cleaning_Kit
                 }
                 else if (newPostLink == false && postLinkHaveNow == true)// browser eke post ekak load welanam
                 {
+                    string oldLink = "";
                     foreach (HtmlElement eli in browser.Document.GetElementsByTagName("a"))
                     {//thiyena okkoma links gannawa
                         if (eli.GetAttribute("href").Contains("ufi/reaction/profile/browser/"))
                         {//aragena oya contains kiyana eka athule thiyena eka thiyeda balala eka uda click koranawa
+                            oldLink = eli.GetAttribute("href");
+                            break;
+                            eli.InvokeMember("click");
+                        }
+                    }
+                    int linkCounter = browser.Document.GetElementsByTagName("a").Count;
+                    foreach (HtmlElement eli in browser.Document.GetElementsByTagName("a"))
+                    {
+                        if(eli.GetAttribute("href").Contains(oldLink))
+                        {
                             newPostLink = true;
                             postLinkHaveNow = false;
                             eli.InvokeMember("click");
                         }
                     }
-
                 }
                 else if (newPostLink == true && postLinkHaveNow == false)
                 {
@@ -434,7 +445,7 @@ namespace Facebook_Cleaning_Kit
                     foreach (HtmlElement eli in browser.Document.GetElementsByTagName("a"))
                     {
                         //contain eke thiyena okkoma gannawa
-                        if (eli.GetAttribute("href").Contains("ufi/reaction/profile/browser/fetch/"))
+                        if (eli.GetAttribute("href").Contains("ufi/reaction/profile/browser/fetch/") )
                         {
                             if (eli.InnerText == ("All 0"))//ekek wat like korala nattan passata goin
                             {
@@ -445,14 +456,13 @@ namespace Facebook_Cleaning_Kit
                                     browser.Navigate(postLink[postCounter]);
                                 }
                             }
-                            else
+                            else 
                             {//mokek hari like koralanam aye list eka load karanwa limit eka bara ganakata set korala 
                                 String golink = eli.GetAttribute("href").ToString().Replace("limit=10", "limit=99999");
-                                golink = golink.Replace("reaction_type=", "");
+                                golink = golink.Replace("reaction_type", "");
                                 newPostLink = true;
                                 postLinkHaveNow = true;
                                 browser.Navigate(golink);//ehema load kornawa
-                                return;
                             }
                         }
 
@@ -476,11 +486,31 @@ namespace Facebook_Cleaning_Kit
                                 //badu link list eke nattan add koranwa
                                 if (!links.Contains("hovercard"))
                                 {
+                                    if (links.Contains("?"))
+                                    {
+                                        String[] names = links.Split('?');
+                                        if (links.Contains("profile.php?id="))
+                                        {
+                                            links = names[0] +"?"+ names[1];
+                                            if (links.Contains("&"))
+                                            {
+                                                String[] name2 = links.Split('&');
+                                                links = name2[0];
+                                            }
+                                        }
+                                        else
+                                        {
+                                            links = names[0];
+                                        }
+                                    }
+                                   
                                     links = links.Replace("&", "");
                                     links = links.Replace("?fref=fr_tabamp;refid=17", "");
                                     links = links.Replace("refid=17", "");
                                     links = links.Replace("?fref=fr_tab", "");
+                                    links = links.Replace("fref=fr_tab", "");
                                     links = links.Replace("?fref=fr_tab", "");
+                                    links = links.Replace("?ref=dbl", "");
                                 }
                                 activeFriendListName.Add(eli.InnerText);
                                 activeFriendList.Add(links);
@@ -505,8 +535,8 @@ namespace Facebook_Cleaning_Kit
             }
             else
             {
-                boolGetActiveFriend = true;
-                getFriendList();
+               boolGetActiveFriend = true;
+               getFriendList();
             }
            
         }
@@ -578,11 +608,30 @@ namespace Facebook_Cleaning_Kit
                         Thread.Sleep(10);
                         if (!link.Contains("hovercard"))
                         {
+                            if (link.Contains("?"))
+                            {
+                                String[] names = link.Split('?');
+                                if (link.Contains("profile.php?id="))
+                                {
+                                    link = names[0] + "?"+ names[1];
+                                    if (link.Contains("&"))
+                                    {
+                                        String[] name2 = link.Split('&');
+                                        link = name2[0];
+                                    }
+                                }
+                                else
+                                {
+                                    link = names[0];
+                                }
+                            }
                             link = link.Replace("&", "");
                             link = link.Replace("?fref=fr_tabamp;refid=17", "");
                             link = link.Replace("refid=17", "");
                             link = link.Replace("?fref=fr_tab", "");
                             link = link.Replace("fref=fr_tab", "");
+                            link = link.Replace("?fref=fr_tab", "");
+                            link = link.Replace("?ref=dbl", "");
                         }
                         //friendNames.Add(eli.InnerText);
                         friendList.Add(link);//aragena balala nattan obanwa
@@ -633,6 +682,7 @@ namespace Facebook_Cleaning_Kit
 
                 if (allUnfriend == false)
                 {
+                    lblStatus.Text = "panna";
                     compareFriends();//call kala
                 }
                 else
@@ -694,7 +744,7 @@ namespace Facebook_Cleaning_Kit
             
             for (int i=0; i <activeFriendList.Count; i++)
             {
-                int counter = friendList.Count - 1;
+                /*int counter = friendList.Count - 1;
                 while (0<= counter)
                 {
                     if(activeFriendList[i] == friendList[counter])
@@ -703,13 +753,13 @@ namespace Facebook_Cleaning_Kit
                         break;
                     }
                     counter--;
-                }
-                /*
+                }*/
+                
                 if (!friendList.Contains(activeFriendList[i]))
                 {
                     activeFriendListName.RemoveAt(i);
                     activeFriendList.Remove(activeFriendList[i]);
-                }*/
+                }
             }
 
            for(int i=0; i<FriendImageList.Count; i++)
@@ -745,7 +795,23 @@ namespace Facebook_Cleaning_Kit
                 lstvInactiveList.Items.Add(item);
             }
            for (int i=0; i<lstvInactiveList.Items.Count; i++)
-            {
+            {/*
+                int counter = activeFriendList.Count - 1;
+                while( counter >= 0)
+                {
+                    if(activeFriendList[counter] == lstvInactiveList.Items[i].SubItems[1].Text)
+                    {
+                        ListViewItem item = new ListViewItem();
+                        item = lstvInactiveList.Items[i];
+                        lstvInactiveList.Items.RemoveAt(i);
+                        lstvActiveList.Items.Add(item);
+                    }
+                    else
+                    {
+                        counter--;
+                    }
+                }*/
+                
                 if (activeFriendList.Contains(lstvInactiveList.Items[i].SubItems[1].Text))
                 {
                     ListViewItem item = new ListViewItem();
